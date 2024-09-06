@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS  
 from utilities.logging_utils import JsonFormatter
 import re
-import logging, json
+import logging
 
 
 #Customize logging with a custom formatter
@@ -17,12 +17,11 @@ app = Flask(__name__)
 CORS(app)  
 
 
-def load_replacements(filename='config.json'):
-    with open(filename, 'r') as file:
-        config = json.load(file)
-    return config.get('replacements')
-replacements = load_replacements()
-
+replacements = {
+    "Google": "Google©",
+    "Fugro": "Fugro B.V.",
+    "Holland": "The Netherlands"
+}
 
 pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in replacements.keys()) + r')\b')
 
@@ -30,11 +29,6 @@ pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in replacements.ke
 def convert_text():
     data = request.json
     text = data.get('text', '')
-    if not data or 'text' not in data:
-        message = "Invalid request, 'text' field is required"
-        logger.error(message)
-        return jsonify({"error": message}), 400
-    
     converted_text = pattern.sub(lambda match: replacements[match.group(0)], text)
 
     return jsonify({"converted_text": converted_text})
